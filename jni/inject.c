@@ -15,14 +15,12 @@
 #ifdef ANDROID
 //#include <linker.h>
 #endif
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <string.h>
 #include <jni.h>
-
-
-
-
+//#include <utils/Log.h>
+#include<android/log.h>
 
 char *sos[] = {
         "linker"
@@ -76,8 +74,45 @@ void call_shit(struct elf_info *einfo) {
     ptrace_dump_regs(&regs,"before return call_shit\n");
 }
 
+int find_pid_of(const char *process_name) {
+	int id;
+	pid_t pid = -1;
+	DIR* dir;
+	FILE *fp;
+	char filename[32];
+	char cmdline[256];
 
+	struct dirent * entry;
 
+	if (process_name == NULL)
+		return -1;
+
+	dir = opendir("/proc");
+	if (dir == NULL)
+		return -1;
+
+	while ((entry = readdir(dir)) != NULL) {
+		id = atoi(entry->d_name);
+		if (id != 0) {
+			sprintf(filename, "/proc/%d/cmdline", id);
+			fp = fopen(filename, "r");
+			if (fp) {
+				fgets(cmdline, sizeof(cmdline), fp);
+				fclose(fp);
+
+				if (strcmp(process_name, cmdline) == 0) {
+					/* process found */
+					pid = id;
+					break;
+				}
+			}
+		}
+	}
+
+	closedir(dir);
+
+	return pid;
+}
 
 int main(int argc, char *argv[]) {
     int pid;
@@ -90,19 +125,17 @@ int main(int argc, char *argv[]) {
     long proc = 0;
     long hooker_fopen = 0;
     (void)argc;
-    pid = atoi(argv[1]);
+    pid = find_pid_of("com.marvell.mars");
     ptrace_attach(pid);
-
 
     ptrace_find_dlinfo(pid);
 
-
-
-    handle = ptrace_dlopen(pid, "/system/lib/libmynet.so",1);
+    handle = ptrace_dlopen(pid, "/data/system/hook/libhook.so",1);
     printf("ptrace_dlopen handle %p\n",handle);
-    proc = (long)ptrace_dlsym(pid, handle, "my_connect");
-    printf("my_connect = %lx\n",proc);
+    proc = (long)ptrace_dlsym(pid, handle, "main");
+    printf("main = %lx\n",proc);
     replace_all_rels(pid, "connect", proc, sos);
+    //ptrace_call(pid, proc, 0, (ptrace_arg*)NULL);
     ptrace_detach(pid);
     exit(0);
 
