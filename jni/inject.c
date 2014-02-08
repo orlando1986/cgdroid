@@ -127,6 +127,7 @@ void copy(char* from, char* to) {
 	}
 	close(from_fd);
 	close(to_fd);
+	system(str_contact("chmod 777 ", to));
 }
 
 int main(int argc, char *argv[]) {

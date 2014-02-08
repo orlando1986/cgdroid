@@ -64,9 +64,9 @@ public class RootImpl {
             OutputStream out = rootprocess.getOutputStream();
             out.write(mkdir.getBytes());
             out.flush();
-            out.write(cmd.getBytes());
-            out.flush();
             out.write(chmod.getBytes());
+            out.flush();
+            out.write(cmd.getBytes());
             out.flush();
             out.write("exit\n".getBytes());
             out.flush();
