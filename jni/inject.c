@@ -25,54 +25,12 @@
 #include <errno.h>
 #include <sys/stat.h>
 #define BUFFER_SIZE 3
+#define HOOK_LIB "/data/system/inject/libhook.so"
+#define HOOK_DEX "/data/system/inject/hook.dex"
 #define LOG_TAG "inject"
 #define LOGI(fmt, args...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, fmt, ##args)
 #define LOGD(fmt, args...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
 #define LOGE(fmt, args...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, ##args)
-
-char *sos[] = { "linker"
-		"libdvm.so", "libnativehelper.so", "libandroid_runtime.so",
-		"libmath.so", "test", "libc.so", NULL };
-
-void call_shit(struct elf_info *einfo) {
-	unsigned long addr2 = 0;
-	unsigned long rel_addr = find_sym_in_rel(einfo, "math_shit");
-	regs_t regs;
-	ptrace_read(einfo->pid, rel_addr, &addr2, sizeof(long));
-	printf("math_shit rel addr\t %lx\n", rel_addr);
-	printf("addr2 is \t %lx\n", addr2);
-	ptrace_readreg(einfo->pid, &regs);
-	ptrace_dump_regs(&regs, "before call to call_shit\n");
-#ifdef THUMB
-	regs.ARM_lr = 1;
-#else
-	regs.ARM_lr = 0;
-#endif
-	regs.ARM_r0 = 5;
-	regs.ARM_r1 = 6;
-	regs.ARM_r2 = 7;
-	regs.ARM_r3 = 8;
-	{
-		int a5 = 9;
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-		a5 = 10;
-		ptrace_push(einfo->pid, &regs, &a5, 4);
-	}
-	regs.ARM_pc = addr2;
-	ptrace_writereg(einfo->pid, &regs);
-	ptrace_cont(einfo->pid);
-	printf("done %d\n", ptrace_wait_for_signal(einfo->pid, SIGSEGV));
-	ptrace_readreg(einfo->pid, &regs);
-	ptrace_dump_regs(&regs, "before return call_shit\n");
-}
 
 int find_pid_of(const char *process_name) {
 	int id;
@@ -112,8 +70,7 @@ int find_pid_of(const char *process_name) {
 	return pid;
 }
 
-char * str_contact(const char *str1,const char *str2)
-{
+char * str_contact(const char *str1,const char *str2) {
      char * result;
      result = (char*)malloc(strlen(str1) + strlen(str2) + 1); //str1的长度 + str2的长度 + \0;
      if(!result){ //如果内存动态分配失败
@@ -130,8 +87,7 @@ void copy(char* from, char* to) {
 	int bytes_read,bytes_write;
 	char buffer[BUFFER_SIZE];
 	char *ptr;
-	if ((from_fd = open(from, O_RDONLY)) == -1) /*open file readonly,返回-1表示出错，否则返回文件描述符*/
-	{
+	if ((from_fd = open(from, O_RDONLY)) == -1) {/*open file readonly,返回-1表示出错，否则返回文件描述符*/
 		LOGD("Open %s Error:%s\n", from, strerror(errno));
 		exit(1);
 	}
@@ -186,20 +142,20 @@ int main(int argc, char *argv[]) {
 	(void) argc;
 
 	LOGD("inject begin");
-	copy(str_contact(argv[1], "libhook.so"), "/data/system/inject/libhook.so");
-	copy(str_contact(argv[1], "hook.dex"), "/data/system/inject/hook.dex");
+	copy(str_contact(argv[1], "libhook.so"), HOOK_LIB);
+	copy(str_contact(argv[1], "hook.dex"), HOOK_DEX);
 
 	pid = find_pid_of("system_server");
 	ptrace_attach(pid);
 
 	ptrace_find_dlinfo(pid);
 
-	handle = ptrace_dlopen(pid, "/data/system/inject/libhook.so", 1);
+	handle = ptrace_dlopen(pid, HOOK_LIB, 1);
 	printf("ptrace_dlopen handle %p\n", handle);
 	proc = (long) ptrace_dlsym(pid, handle, "main");
 	printf("main = %lx\n", proc);
 	//replace_all_rels(pid, "connect", proc, sos);
-	ptrace_call(pid, proc, 0, (ptrace_arg*) NULL);
+	ptrace_call(pid, proc, 0, NULL);
 	ptrace_detach(pid);
 	exit(0);
 
