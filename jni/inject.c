@@ -25,9 +25,10 @@
 #include <errno.h>
 #include <sys/stat.h>
 #define BUFFER_SIZE 3
-#define HOOK_LIB "/data/system/inject/libhook.so"
-#define HOOK_DEX "/data/system/inject/hook.dex"
-#define LOG_TAG "inject"
+#define HOOK_PATH  "/data/system/inject/"
+#define HOOK_LIB   "libhook.so"
+#define HOOK_DEX   "hook.dex"
+#define LOG_TAG    "inject"
 #define LOGI(fmt, args...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, fmt, ##args)
 #define LOGD(fmt, args...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
 #define LOGE(fmt, args...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, ##args)
@@ -143,21 +144,22 @@ int main(int argc, char *argv[]) {
 	(void) argc;
 
 	LOGD("inject begin");
-	copy(str_contact(argv[1], "libhook.so"), HOOK_LIB);
-	copy(str_contact(argv[1], "hook.dex"), HOOK_DEX);
+	copy(str_contact(argv[1], HOOK_LIB), str_contact(HOOK_PATH, HOOK_LIB));
+	copy(str_contact(argv[1], HOOK_DEX), str_contact(HOOK_PATH, HOOK_DEX));
 
 	pid = find_pid_of("system_server");
 	ptrace_attach(pid);
 
 	ptrace_find_dlinfo(pid);
 
-	handle = ptrace_dlopen(pid, HOOK_LIB, 1);
+	handle = ptrace_dlopen(pid, str_contact(HOOK_PATH, HOOK_LIB), 1);
 	printf("ptrace_dlopen handle %p\n", handle);
 	proc = (long) ptrace_dlsym(pid, handle, "main");
 	printf("main = %lx\n", proc);
 	//replace_all_rels(pid, "connect", proc, sos);
 	ptrace_call(pid, proc, 0, NULL);
 	ptrace_detach(pid);
+	LOGD("inject end");
 	exit(0);
 
 }

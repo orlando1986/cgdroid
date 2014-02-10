@@ -27,6 +27,7 @@
 #define LOGE(fmt, args...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, ##args)
 
 int main(int argc, char *argv[]) {
-	LOGD("hook success");
+	LOGD("load dex begin");
+	LOGD("load dex end");
     return -1;
 }

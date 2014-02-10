@@ -58,6 +58,7 @@ public class RootImpl {
         final String cmd = filepath + INJ + " " + filepath + "\n";
         final String mkdir = "mkdir /data/system/inject/ \n";
         final String chmod = "chmod -R 777 /data/system/inject/ \n";
+        final String chmod_inj = "chmod 777 " + filepath + INJ + " \n";
         Log.d(TAG, "cmd=" + cmd);
         try {
             Process rootprocess = Runtime.getRuntime().exec("su");
@@ -65,6 +66,8 @@ public class RootImpl {
             out.write(mkdir.getBytes());
             out.flush();
             out.write(chmod.getBytes());
+            out.flush();
+            out.write(chmod_inj.getBytes());
             out.flush();
             out.write(cmd.getBytes());
             out.flush();
