@@ -10,7 +10,6 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <android/log.h>
 #include <AndroidRuntime.h>
 #include "utils.h"
 

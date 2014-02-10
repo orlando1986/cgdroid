@@ -44,11 +44,11 @@ void get_elf_info(int pid, Elf32_Addr base, struct elf_info *einfo) {
 //    puint(einfo->phdr.p_paddr);
 //    puint(einfo->phdr.p_type);
 //    puint(einfo->phdr.p_vaddr);
-    printf("dump %d phdr\n", einfo->ehdr.e_phnum);
+    LOGD("dump %d phdr\n", einfo->ehdr.e_phnum);
     for(i=0; i < einfo->ehdr.e_phnum; i++) {
         Elf32_Phdr phdr;
         ptrace_read(pid, einfo->phdr_addr + i * sizeof(Elf32_Phdr), &phdr, sizeof(Elf32_Phdr));
-//        printf(">\n");
+//        LOGD(">\n");
 //        puint(phdr.p_align);
 //        puint(phdr.p_filesz);
 //        puint(phdr.p_flags);
@@ -90,7 +90,7 @@ unsigned long find_sym_in_rel(struct elf_info *einfo, char *sym_name) {
     char *str = NULL;
     unsigned long ret;
     struct dyn_info dinfo;
-    printf("find sym in rel %p %s \n", (void*)einfo->base, sym_name);
+    LOGD("find sym in rel %p %s \n", (void*)einfo->base, sym_name);
 
     get_dyn_info(einfo, &dinfo);
     pint(dinfo.nrels);
@@ -99,12 +99,12 @@ unsigned long find_sym_in_rel(struct elf_info *einfo, char *sym_name) {
     pint(dinfo.totalrelsize);
     for (i = 0; i < dinfo.nrels; i++) {
         ptrace_read(einfo->pid, (unsigned long) (dinfo.jmprel + i * sizeof(Elf32_Rel)), &rel, sizeof(Elf32_Rel));
-        printf("rel addr %p\n", &rel);
+        LOGD("rel addr %p\n", &rel);
 
         if (ELF32_R_SYM(rel.r_info)) {
             ptrace_read(einfo->pid, dinfo.symtab + ELF32_R_SYM(rel.r_info) * sizeof(Elf32_Sym), &sym, sizeof(Elf32_Sym));
             str = ptrace_readstr(einfo->pid, dinfo.strtab + sym.st_name);
-            printf("   str-> %s\n", str);
+            LOGD("   str-> %s\n", str);
             if (strcmp(str, sym_name) == 0) {
                 free(str);
                 break;
@@ -131,7 +131,7 @@ void get_dyn_info(struct elf_info *einfo, struct dyn_info *dinfo) {
     Elf32_Dyn dyn;
     int i = 0;
 
-    printf("get_dyn_info 0x%08x...\n",einfo->dynaddr);
+    LOGD("get_dyn_info 0x%08x...\n",einfo->dynaddr);
 
     ptrace_read(einfo->pid, einfo->dynaddr + i * sizeof(Elf32_Dyn), &dyn, sizeof(Elf32_Dyn));
     i++;
@@ -148,24 +148,24 @@ void get_dyn_info(struct elf_info *einfo, struct dyn_info *dinfo) {
         case DT_JMPREL:
             dinfo->jmprel = (IS_DYN(einfo)?einfo->base:0) + dyn.d_un.d_ptr;
             puts("DT_JMPREL");
-            printf("jmprel\t %08x\n", dinfo->jmprel);
+            LOGD("jmprel\t %08x\n", dinfo->jmprel);
             break;
         case DT_PLTRELSZ:
             puts("DT_PLTRELSZ");
             dinfo->totalrelsize = dyn.d_un.d_val;
-            printf("totalrelsize %d\n", dinfo->totalrelsize);
+            LOGD("totalrelsize %d\n", dinfo->totalrelsize);
             break;
         case DT_RELAENT:
             puts("DT_RELAENT");
 
             dinfo->relsize = dyn.d_un.d_val;
-            printf("relsize %d\n", dinfo->relsize);
+            LOGD("relsize %d\n", dinfo->relsize);
             break;
         case DT_RELENT:
             puts("DT_RELENT");
 
             dinfo->relsize = dyn.d_un.d_val;
-            printf("relsize2 %d\n", dinfo->relsize);
+            LOGD("relsize2 %d\n", dinfo->relsize);
             //puts("DT_RELENT");
             break;
         }
@@ -196,11 +196,11 @@ void replace_all_rels(int pid, char *funcname, long addr, char **sos) {
     memset(maps,0,sizeof(maps));
     memset(soaddrs,0,sizeof(soaddrs));
     memset(soaddr,0,sizeof(soaddr));
-    sprintf(maps,"/proc/%d/maps",pid);
+    sLOGD(maps,"/proc/%d/maps",pid);
     m = fopen(maps,"r");
     if(!m)
     {
-        printf("open %s error!\n",maps);
+        LOGD("open %s error!\n",maps);
     }
     while(fgets(line,sizeof(line),m))
     {
@@ -221,7 +221,7 @@ void replace_all_rels(int pid, char *funcname, long addr, char **sos) {
         }
         sscanf(line,"%s %s %*s %*s %*s %s",soaddrs,prop,soname);
         sscanf(soaddrs,"%[^-]",soaddr);
-        printf("#### %s %s %s\n",soaddr,prop,soname);
+        LOGD("#### %s %s %s\n",soaddr,prop,soname);
         base = strtoul(soaddr,NULL, 16);
         puint(base);
         get_elf_info(pid, base, &einfo);
@@ -230,7 +230,7 @@ void replace_all_rels(int pid, char *funcname, long addr, char **sos) {
         puint(tmpaddr);
         if(tmpaddr != 0) {
             ptrace_write(pid,tmpaddr,&addr,4);
-            printf("base of %-40s     %08x  %08x %08x\n",soname, (int)base, (int)tmpaddr, (int)addr);
+            LOGD("base of %-40s     %08x  %08x %08x\n",soname, (int)base, (int)tmpaddr, (int)addr);
 
         }
     }

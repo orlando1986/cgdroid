@@ -20,7 +20,6 @@
 #include <string.h>
 #include <jni.h>
 //#include <utils/Log.h>
-#include<android/log.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>

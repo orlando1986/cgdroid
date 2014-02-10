@@ -31,9 +31,9 @@ dl_fl_t ldl;
 
 void ptrace_dump_regs(regs_t *regs, char *msg) {
     int i = 0;
-    printf("------regs %s-----\n", msg);
+    LOGD("------regs %s-----\n", msg);
     for (i = 0; i < 18; i++) {
-        printf("r[%02d]=%lx\n", i, regs->uregs[i]);
+        LOGD("r[%02d]=%lx\n", i, regs->uregs[i]);
     }
 }
 
@@ -45,7 +45,7 @@ void ptrace_attach(int pid) {
         exit(-1);
     }
     status = ptrace_wait_for_signal(pid, SIGSTOP);
-    printf("ptrace_wait_for_signal: %d %d\n", __LINE__, status);
+    LOGD("ptrace_wait_for_signal: %d %d\n", __LINE__, status);
     //waitpid(pid, NULL, WUNTRACED);
 
     ptrace_readreg(pid, &regs);
@@ -66,10 +66,10 @@ void ptrace_attach(int pid) {
 
     ptrace_cont(pid);
 
-    printf("waiting.. sigal...\n");
+    LOGD("waiting.. sigal...\n");
 
     status = ptrace_wait_for_signal(pid, SIGSEGV);
-    printf("ptrace_wait_for_signal2: %d %d\n", __LINE__, status);
+    LOGD("ptrace_wait_for_signal2: %d %d\n", __LINE__, status);
 
 }
 
@@ -106,7 +106,7 @@ void ptrace_write(int pid, unsigned long addr, void *vptr, int len) {
         count += 4;
 
         if (errno != 0)
-            printf("ptrace_write failed\t %ld\n", addr + count);
+            LOGD("ptrace_write failed\t %ld\n", addr + count);
     }
 }
 
@@ -166,13 +166,13 @@ char * ptrace_readstr(int pid, unsigned long addr) {
 
 void ptrace_readreg(int pid, regs_t *regs) {
     if (ptrace(PTRACE_GETREGS, pid, NULL, regs))
-        printf("*** ptrace_readreg error ***\n");
+        LOGD("*** ptrace_readreg error ***\n");
 
 }
 
 void ptrace_writereg(int pid, regs_t *regs) {
     if (ptrace(PTRACE_SETREGS, pid, NULL, regs))
-        printf("*** ptrace_writereg error ***\n");
+        LOGD("*** ptrace_writereg error ***\n");
 }
 
 unsigned long ptrace_push(int pid, regs_t *regs, void *paddr, int size) {
@@ -226,7 +226,7 @@ void *ptrace_dlopen(pid_t pid, const char *filename, int flag) {
     regs.ARM_pc= ldl.l_dlopen;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    printf("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_call\n");
     return (void*) regs.ARM_r0;
@@ -254,7 +254,7 @@ void *ptrace_dlsym(pid_t pid, void *handle, const char *symbol) {
     regs.ARM_pc= ldl.l_dlsym;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    printf("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_dlsym\n");
     return (void*) regs.ARM_r0;
@@ -280,7 +280,7 @@ int ptrace_mymath_add(pid_t pid, long mymath_add_addr, int a, int b) {
     regs.ARM_pc= mymath_add_addr;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    printf("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_mymath_add\n");
     return regs.ARM_r0;
@@ -300,7 +300,7 @@ int ptrace_call(int pid, long proc, int argc, ptrace_arg *argv) {
         if (arg->type == PAT_STR) {
             arg->_stackid = ptrace_push(pid, &regs, arg->s, strlen(arg->s) + 1);
         } else if (arg->type == PAT_MEM) {
-            //printf("push data %p to stack[%d] :%d \n", arg->mem.addr, stackcnt, *((int*)arg->mem.addr));
+            //LOGD("push data %p to stack[%d] :%d \n", arg->mem.addr, stackcnt, *((int*)arg->mem.addr));
             arg->_stackid = ptrace_push(pid, &regs, arg->mem.addr, arg->mem.size);
         }
     }
@@ -313,7 +313,7 @@ int ptrace_call(int pid, long proc, int argc, ptrace_arg *argv) {
         } else if (arg->type == PAT_MEM) {
             regs.uregs[i] = arg->_stackid;
         } else {
-            printf("unkonwn arg type\n");
+            LOGD("unkonwn arg type\n");
         }
     }
 
@@ -326,7 +326,7 @@ int ptrace_call(int pid, long proc, int argc, ptrace_arg *argv) {
         } else if (arg->type == PAT_MEM) {
             ptrace_push(pid, &regs, &arg->_stackid, sizeof(unsigned long));
         } else {
-            printf("unkonwn arg type\n");
+            LOGD("unkonwn arg type\n");
         }
     }
 #ifdef THUMB
@@ -337,7 +337,7 @@ int ptrace_call(int pid, long proc, int argc, ptrace_arg *argv) {
     regs.ARM_pc= proc;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    printf("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_call\n");
 
@@ -382,7 +382,7 @@ static Elf32_Addr get_linker_base(int pid, Elf32_Addr *base_start, Elf32_Addr *b
             if (!linestr) {
                 break;
             }
-            printf("........%s <--\n", line);
+            LOGD("........%s <--\n", line);
             if (strlen(line) > atleast && strstr(line, "/system/bin/linker")) {
                 memset(startbuf, 0, sizeof(startbuf));
                 memset(endbuf, 0, sizeof(endbuf));
@@ -414,10 +414,10 @@ dl_fl_t *ptrace_find_dlinfo(int pid) {
     Elf32_Addr base = get_linker_base(pid, &base_start, &base_end);
 
     if (base == 0) {
-        printf("no linker found\n");
+        LOGD("no linker found\n");
         return NULL ;
     } else {
-        printf("search libdl.so from %08u to %08u\n", base_start, base_end);
+        LOGD("search libdl.so from %08u to %08u\n", base_start, base_end);
     }
 
     for (addr = base_start; addr < base_end; addr += 4) {
@@ -429,8 +429,8 @@ dl_fl_t *ptrace_find_dlinfo(int pid) {
             continue;
         }
 
-        printf("soinfo found at %08u\n", addr);
-        printf("symtab: %p\n", lsi.symtab);
+        LOGD("soinfo found at %08u\n", addr);
+        LOGD("symtab: %p\n", lsi.symtab);
         ptrace_read(pid, addr, &lsi, sizeof(lsi));
 
         off = (Elf32_Addr)lsi.symtab;
@@ -451,13 +451,13 @@ dl_fl_t *ptrace_find_dlinfo(int pid) {
         ldl.l_dlsym = sym.st_value;
         off += sizeof(sym);
 
-        printf("dlopen addr %p\n", (void*) ldl.l_dlopen);
-        printf("dlclose addr %p\n", (void*) ldl.l_dlclose);
-        printf("dlsym addr %p\n", (void*) ldl.l_dlsym);
+        LOGD("dlopen addr %p\n", (void*) ldl.l_dlopen);
+        LOGD("dlclose addr %p\n", (void*) ldl.l_dlclose);
+        LOGD("dlsym addr %p\n", (void*) ldl.l_dlsym);
         return &ldl;
 
     }
-    printf("%s not found!\n", LIBDLSO);
+    LOGD("%s not found!\n", LIBDLSO);
     return NULL ;
 }
 
