@@ -15,7 +15,7 @@ public class RootImpl {
     private static Context sContext = null;
     private static final String INJ = "inj";
     private static final String HOOKLIB = "libhook.so";
-    private static final String HOOKDEX = "hook.dex";
+    private static final String HOOKDEX = "hook.jar";
 
     public static void startInject(Context context) {
         sContext = context;

@@ -27,7 +27,7 @@
 #define BUFFER_SIZE 3
 #define HOOK_PATH  "/data/system/inject/"
 #define HOOK_LIB   "libhook.so"
-#define HOOK_DEX   "hook.dex"
+#define HOOK_DEX   "hook.jar"
 #define LOG_TAG    "inject"
 #define LOGI(fmt, args...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, fmt, ##args)
 #define LOGD(fmt, args...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
 	copy(str_contact(argv[1], HOOK_LIB), str_contact(HOOK_PATH, HOOK_LIB));
 	copy(str_contact(argv[1], HOOK_DEX), str_contact(HOOK_PATH, HOOK_DEX));
 
-	pid = find_pid_of("system_server");
+	pid = find_pid_of("com.marvell.mars");
 	ptrace_attach(pid);
 
 	ptrace_find_dlinfo(pid);

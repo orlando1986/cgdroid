@@ -10,13 +10,15 @@ LOCAL_LDLIBS += -L$(SYSROOT)/usr/lib -llog
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES:=  libhook.c
+LOCAL_SRC_FILES:=  libhook.cpp
 LOCAL_MODULE := libhook
 LOCAL_MODULE_TAGS := optional
-LOCAL_LDLIBS += -L$(SYSROOT)/usr/lib -llog
+LOCAL_SHARED_LIBRARIES := \
+	libcutils \
+	libutils \
+	libdl \
+	libdvm \
+	libandroid_runtime
+LOCAL_LDLIBS += -L$(SYSROOT)/usr/lib -llog -landroid_runtime
 #LOCAL_C_INCLUDES := 
 include $(BUILD_SHARED_LIBRARY)
-
-
-
-
