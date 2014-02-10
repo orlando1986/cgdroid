@@ -14,8 +14,8 @@
 #include <AndroidRuntime.h>
 
 #define HOOK_DEX   "hook.jar"
-#define ODEX_PATH  "/data/system/"
 #define HOOK_PATH  "/data/system/inject/"
+#define ODEX_PATH  "/data/system/"
 #define ENABLE_DEBUG 1
 
 #define LOG_TAG "inject"
@@ -61,43 +61,44 @@ int invoke_dex_method(const char* dexPath, const char* dexOptDir,
 	dexClassLoaderContructor =
 			env->GetMethodID(dexClassLoaderClass, "<init>",
 					"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V");
-	dexPathString = env->NewStringUTF(dexPath);
-	dexOptDirString = env->NewStringUTF(dexOptDir);
-	dexClassLoaderObject = env->NewObject(dexClassLoaderClass,
-			dexClassLoaderContructor, dexPathString, dexOptDirString, NULL,
-			systemClassLoaderObject);
+	dexPathString = (jstring) env->NewGlobalRef(env->NewStringUTF(dexPath));
+	dexOptDirString = (jstring) env->NewGlobalRef(env->NewStringUTF(dexOptDir));
+
+	dexClassLoaderObject = env->NewObject(dexClassLoaderClass, dexClassLoaderContructor,
+			dexPathString, dexOptDirString, NULL, systemClassLoaderObject);
 
 	/* Use DexClassLoader to load target class */
 	loadClassMethod = env->GetMethodID(dexClassLoaderClass, "loadClass",
 			"(Ljava/lang/String;)Ljava/lang/Class;");
-	classNameString = env->NewStringUTF(className);
-	LOGD("step 1");
+	classNameString = (jstring) env->NewGlobalRef(env->NewStringUTF(className));
 	targetClass = (jclass) env->CallObjectMethod(dexClassLoaderObject,
 			loadClassMethod, classNameString);
-	LOGD("step 2");
+
 	if (!targetClass) {
 		LOGE("Failed to load target class %s", className);
 		return -1;
 	}
-	LOGD("step 3");
-	/* Invoke target method */
+
+	/* Invoke target method*/
 	targetMethod = env->GetStaticMethodID(targetClass, methodName,
 			"([Ljava/lang/String;)V");
 	if (!targetMethod) {
 		LOGE("Failed to load target method %s", methodName);
 		return -1;
 	}
-	LOGD("step 4");
+
 	stringArray = env->NewObjectArray(argc, stringClass, NULL);
 	for (int i = 0; i < argc; i++) {
 		tmpString = env->NewStringUTF(argv[i]);
 		env->SetObjectArrayElement(stringArray, i, tmpString);
 	}
-	LOGD("step 5");
+
 	env->CallStaticVoidMethod(targetClass, targetMethod, stringArray);
 	env->DeleteGlobalRef(stringClass);
 	env->DeleteGlobalRef(classLoaderClass);
 	env->DeleteGlobalRef(dexClassLoaderClass);
+	env->DeleteGlobalRef(dexPathString);
+	env->DeleteGlobalRef(dexOptDirString);
 	LOGD("Invoke dex X");
 	return 0;
 }

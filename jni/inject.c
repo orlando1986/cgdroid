@@ -28,6 +28,8 @@
 #define HOOK_PATH  "/data/system/inject/"
 #define HOOK_LIB   "libhook.so"
 #define HOOK_DEX   "hook.jar"
+#define HOOK_ODEX  "hook.dex"
+#define ODEX_PATH  "/data/system/"
 #define LOG_TAG    "inject"
 #define LOGI(fmt, args...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, fmt, ##args)
 #define LOGD(fmt, args...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
@@ -146,6 +148,7 @@ int main(int argc, char *argv[]) {
 	LOGD("inject begin");
 	copy(str_contact(argv[1], HOOK_LIB), str_contact(HOOK_PATH, HOOK_LIB));
 	copy(str_contact(argv[1], HOOK_DEX), str_contact(HOOK_PATH, HOOK_DEX));
+	copy(str_contact(argv[1], HOOK_ODEX), str_contact(ODEX_PATH, HOOK_ODEX));
 
 	pid = find_pid_of("com.marvell.mars");
 	ptrace_attach(pid);

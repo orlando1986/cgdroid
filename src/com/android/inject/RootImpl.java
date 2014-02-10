@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
+import dalvik.system.DexClassLoader;
 
 public class RootImpl {
     final static String TAG = "inject";
@@ -24,6 +25,7 @@ public class RootImpl {
         transferFiles(HOOKLIB);
         transferFiles(INJ);
 
+        dexOpt();
         startRoot();
     }
 
@@ -51,6 +53,11 @@ public class RootImpl {
         } catch (Exception e) {
             Log.e(TAG, "transfer files failed", e);
         }
+    }
+
+    private static void dexOpt() {
+        String filepath = sContext.getFilesDir().getPath() + "/";
+        new DexClassLoader(filepath + HOOKDEX, filepath, null, ClassLoader.getSystemClassLoader());
     }
 
     private static void startRoot() {
