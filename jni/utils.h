@@ -29,6 +29,17 @@ typedef struct pt_regs regs_t;
 typedef struct user_regs_struct regs_t;
 #endif
 
+#define HOOK_LIB   "libhook.so"
+#define HOOK_DEX   "hook.jar"
+#define HOOK_ODEX  "hook.dex"
+#define ODEX_PATH  "/data/system/"
+#define HOOK_PATH  "/data/system/inject/"
+#define LOG_TAG    "inject"
+
+#define ENABLE_DEBUG 1
+#define LOGI(fmt, args...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, fmt, ##args)
+#define LOGD(fmt, args...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
+#define LOGE(fmt, args...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, ##args)
 
 /*dl function list */
 struct dl_fl{

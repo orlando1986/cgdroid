@@ -24,16 +24,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
+
 #define BUFFER_SIZE 3
-#define HOOK_PATH  "/data/system/inject/"
-#define HOOK_LIB   "libhook.so"
-#define HOOK_DEX   "hook.jar"
-#define HOOK_ODEX  "hook.dex"
-#define ODEX_PATH  "/data/system/"
-#define LOG_TAG    "inject"
-#define LOGI(fmt, args...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, fmt, ##args)
-#define LOGD(fmt, args...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
-#define LOGE(fmt, args...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, ##args)
 
 int find_pid_of(const char *process_name) {
 	int id;
@@ -74,14 +66,14 @@ int find_pid_of(const char *process_name) {
 }
 
 char * str_contact(const char *str1,const char *str2) {
-     char * result;
-     result = (char*)malloc(strlen(str1) + strlen(str2) + 1); //str1的长度 + str2的长度 + \0;
-     if(!result){ //如果内存动态分配失败
-    	LOGD("Error: malloc failed in concat! \n");
-        exit(EXIT_FAILURE);
-     }
-     strcpy(result,str1);
-     strcat(result,str2); //字符串拼接
+    char * result;
+    result = (char*)malloc(strlen(str1) + strlen(str2) + 1); //str1的长度 + str2的长度 + \0;
+    if(!result){ //如果内存动态分配失败
+    LOGD("Error: malloc failed in concat! \n");
+       exit(EXIT_FAILURE);
+    }
+    strcpy(result,str1);
+    strcat(result,str2); //字符串拼接
     return result;
 }
 
@@ -150,7 +142,7 @@ int main(int argc, char *argv[]) {
 	copy(str_contact(argv[1], HOOK_DEX), str_contact(HOOK_PATH, HOOK_DEX));
 	copy(str_contact(argv[1], HOOK_ODEX), str_contact(ODEX_PATH, HOOK_ODEX));
 
-	pid = find_pid_of("com.marvell.mars");
+	pid = find_pid_of("system_server");
 	ptrace_attach(pid);
 
 	ptrace_find_dlinfo(pid);
@@ -164,5 +156,4 @@ int main(int argc, char *argv[]) {
 	ptrace_detach(pid);
 	LOGD("inject end");
 	exit(0);
-
 }

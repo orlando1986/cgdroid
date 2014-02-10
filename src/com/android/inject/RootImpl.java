@@ -32,8 +32,7 @@ public class RootImpl {
     private static void transferFiles(String filename) {
         AssetManager assetManager = sContext.getAssets();
         try {
-            File filedir = sContext.getFilesDir();
-            String path = filedir.getPath() + "/";
+            String path = sContext.getFilesDir() + "/";
             File file = new File(path + filename);
             if (file.exists()) {
                 //return;
