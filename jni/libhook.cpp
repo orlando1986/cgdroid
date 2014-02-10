@@ -13,8 +13,9 @@
 #include <android/log.h>
 #include <AndroidRuntime.h>
 
-#define HOOK_DEX "hook.jar"
-#define ODEX_PATH "/data/system/"
+#define HOOK_DEX   "hook.jar"
+#define ODEX_PATH  "/data/system/"
+#define HOOK_PATH  "/data/system/inject/"
 #define ENABLE_DEBUG 1
 
 #define LOG_TAG "inject"
@@ -103,7 +104,7 @@ int invoke_dex_method(const char* dexPath, const char* dexOptDir,
 
 int main(int argc, char *argv[]) {
 	LOGD("loading dex begin");
-	invoke_dex_method(str_contact("/data/system/inject/", HOOK_DEX), "/data/system/", "com.android.inject.Hooker", "main", 0, NULL);
+	invoke_dex_method(str_contact(HOOK_PATH, HOOK_DEX), ODEX_PATH, "com.android.inject.Hooker", "main", 0, NULL);
 	LOGD("loading dex end");
     return -1;
 }
