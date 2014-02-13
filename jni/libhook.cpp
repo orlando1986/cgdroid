@@ -15,19 +15,7 @@
 
 extern "C" {
 
-char * str_contact(const char *str1,const char *str2) {
-    char * result;
-    result = (char*)malloc(strlen(str1) + strlen(str2) + 1); //str1的长度 + str2的长度 + \0;
-    if(!result){ //如果内存动态分配失败
-       LOGD("Error: malloc failed in concat! \n");
-       exit(EXIT_FAILURE);
-    }
-    strcpy(result,str1);
-    strcat(result,str2); //字符串拼接
-    return result;
-}
-
-int invoke_dex_method(const char* dexPath, const char* dexOptDir,
+int invoke_dex_method(const char* dexPath,
 		const char* className, const char* methodName, int argc, char *argv[]) {
 	LOGD("Invoke dex E");
 	JNIEnv * env = android::AndroidRuntime::getJNIEnv();
@@ -41,7 +29,7 @@ int invoke_dex_method(const char* dexPath, const char* dexOptDir,
 	/* Get SystemClasLoader */
 	stringClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
 	classLoaderClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/ClassLoader"));
-	dexClassLoaderClass = (jclass) env->NewGlobalRef(env->FindClass("dalvik/system/DexClassLoader"));
+	dexClassLoaderClass = (jclass) env->NewGlobalRef(env->FindClass("dalvik/system/DexFile"));
 	getSystemClassLoaderMethod = env->GetStaticMethodID(classLoaderClass,
 			"getSystemClassLoader", "()Ljava/lang/ClassLoader;");
 	systemClassLoaderObject = env->CallStaticObjectMethod(classLoaderClass,
@@ -50,19 +38,19 @@ int invoke_dex_method(const char* dexPath, const char* dexOptDir,
 	/* Create DexClassLoader */
 	dexClassLoaderContructor =
 			env->GetMethodID(dexClassLoaderClass, "<init>",
-					"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V");
+					"(Ljava/lang/String;)V");
 	dexPathString = (jstring) env->NewGlobalRef(env->NewStringUTF(dexPath));
-	dexOptDirString = (jstring) env->NewGlobalRef(env->NewStringUTF(dexOptDir));
+	//dexOptDirString = (jstring) env->NewGlobalRef(env->NewStringUTF(dexOptDir));
 
 	dexClassLoaderObject = env->NewObject(dexClassLoaderClass, dexClassLoaderContructor,
-			dexPathString, dexOptDirString, NULL, systemClassLoaderObject);
+			dexPathString);
 
 	/* Use DexClassLoader to load target class */
 	loadClassMethod = env->GetMethodID(dexClassLoaderClass, "loadClass",
-			"(Ljava/lang/String;)Ljava/lang/Class;");
+			"(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;");
 	classNameString = (jstring) env->NewGlobalRef(env->NewStringUTF(className));
 	targetClass = (jclass) env->CallObjectMethod(dexClassLoaderObject,
-			loadClassMethod, classNameString);
+			loadClassMethod, classNameString, systemClassLoaderObject);
 
 	if (!targetClass) {
 		LOGE("Failed to load target class %s", className);
@@ -93,9 +81,9 @@ int invoke_dex_method(const char* dexPath, const char* dexOptDir,
 	return 0;
 }
 
-int main(int argc, char *argv[]) {
-	LOGD("loading dex begin");
-	invoke_dex_method(str_contact(HOOK_PATH, HOOK_DEX), ODEX_PATH, "com.android.inject.Hooker", "main", 0, NULL);
+int hook(char *argv) {
+	LOGD("loading dex begin: %s", argv);
+	invoke_dex_method(argv, "com.assquad.inject.Hooker", "main", 0, NULL);
 	LOGD("loading dex end");
     return -1;
 }

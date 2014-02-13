@@ -196,7 +196,7 @@ void replace_all_rels(int pid, char *funcname, long addr, char **sos) {
     memset(maps,0,sizeof(maps));
     memset(soaddrs,0,sizeof(soaddrs));
     memset(soaddr,0,sizeof(soaddr));
-    sLOGD(maps,"/proc/%d/maps",pid);
+    LOGD(maps,"/proc/%d/maps",pid);
     m = fopen(maps,"r");
     if(!m)
     {

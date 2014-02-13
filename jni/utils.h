@@ -31,10 +31,6 @@ typedef struct user_regs_struct regs_t;
 #endif
 
 #define HOOK_LIB   "libhook.so"
-#define HOOK_DEX   "hook.jar"
-#define HOOK_ODEX  "hook.dex"
-#define ODEX_PATH  "/data/system/"
-#define HOOK_PATH  "/data/system/inject/"
 #define LOG_TAG    "inject"
 
 #define ENABLE_DEBUG 1
