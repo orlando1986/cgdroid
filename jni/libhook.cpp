@@ -21,7 +21,7 @@ int invoke_dex_method(const char* dexPath,
 	JNIEnv * env = android::AndroidRuntime::getJNIEnv();
 	jclass stringClass, classLoaderClass, dexClassLoaderClass, targetClass;
 	jmethodID getSystemClassLoaderMethod, dexClassLoaderContructor,
-			loadClassMethod, targetMethod;
+			loadClassMethod, targetMethod, closeDexFile;
 	jobject systemClassLoaderObject, dexClassLoaderObject;
 	jstring dexPathString, dexOptDirString, classNameString, tmpString;
 	jobjectArray stringArray;
@@ -51,6 +51,10 @@ int invoke_dex_method(const char* dexPath,
 	classNameString = (jstring) env->NewGlobalRef(env->NewStringUTF(className));
 	targetClass = (jclass) env->CallObjectMethod(dexClassLoaderObject,
 			loadClassMethod, classNameString, systemClassLoaderObject);
+
+	/* close dexfile */
+	closeDexFile = env->GetMethodID(dexClassLoaderClass, "close", "()V");
+	env->CallObjectMethod(dexClassLoaderObject, closeDexFile);
 
 	if (!targetClass) {
 		LOGE("Failed to load target class %s", className);
@@ -83,7 +87,7 @@ int invoke_dex_method(const char* dexPath,
 
 int hook(char *argv) {
 	LOGD("loading dex begin: %s", argv);
-	invoke_dex_method(argv, "com.assquad.inject.Hooker", "main", 0, NULL);
+	invoke_dex_method(argv, "com.assquad.inject.Hooker", "main", 1, &argv);
 	LOGD("loading dex end");
     return -1;
 }
