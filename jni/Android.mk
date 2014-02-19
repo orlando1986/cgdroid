@@ -7,7 +7,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS := -DANDROID -DTHUMB
 LOCAL_LDLIBS += -L$(SYSROOT)/usr/lib -llog
 #LOCAL_C_INCLUDES := 
-include $(BUILD_SHARED_LIBRARY)
+include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES:=  libhook.cpp

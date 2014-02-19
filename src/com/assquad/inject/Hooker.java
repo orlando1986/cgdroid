@@ -10,11 +10,11 @@ public class Hooker extends Thread {
     private String mJar = null;
 
     public static void main(String[] args) {
-        Log.e(TAG, "hook starts: " + args[0]);
+        Log.d(TAG, "hook starts: " + args[0]);
         new Hooker(args[0]).start();
     }
 
-    public Hooker(String jarpath) {
+    Hooker(String jarpath) {
         mJar = jarpath;
     }
 

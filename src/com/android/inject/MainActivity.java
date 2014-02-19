@@ -11,8 +11,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Injector i = new Injector(this);
-        i.startInjection("com.marvell.mars");
+        Injector inj = new Injector(this);
+        inj.startInjection("com.marvell.mars");
     }
 
 }

@@ -24,6 +24,7 @@
 
 #include <stdarg.h>
 #include "linker.h"
+#include "utils.h"
 
 static regs_t oldregs;
 

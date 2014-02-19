@@ -12,26 +12,40 @@ import android.util.Log;
 
 /**
  * Welcome to use Injector tool coded by assquad, hope you can enjoy the
- * injection journey. First of all, you must make sure your phone is rooted
+ * injection journey. First of all, you must make sure your device is rooted;
+ * Second you should implement a class whose class name is
+ * "com.assquad.inject.HookerRunner" and with a method called "onHooked()". This
+ * method will be called in target process, you can design everything beginning
+ * from this method. Be warning: we do not support native library in target
+ * process, which means you can not call your own native method in target
+ * process unless you explicitly load a native library with System.load().
  * 
+ * Here is a sample for HookedRunner:
+ * 
+ * package com.assquad.inject;
+ * 
+ * import android.util.Log;
+ * 
+ * public class HookerRunner {
+ *     public void onHooked() {
+ *          Log.e("assquad", "onHooked");
+ *      }
+ * }
+ *
  * @author assquad
  * 
  */
 public class Injector {
     final static boolean DEBUG = true;
     final static String TAG = "assquad";
-    private static final String ROOT = "root.jar";
+    private final static String EXECUTABLE = "inj";
     private Context mContext = null;
 
     /**
-     * Constructor of Injector, you may pass any jar path which can be accessed
-     * by target process. Here is a tip that system_server can not access
-     * sdcard, while the 3rd app could
+     * Constructor of Injector, pass a context here.
      * 
      * @param context
      *            Prefer the application context
-     * @param hookjarPath
-     *            A jar file path that the target process can access
      */
     public Injector(Context context) {
         mContext = context.getApplicationContext();
@@ -39,24 +53,24 @@ public class Injector {
 
     /**
      * This is the beginning of injection, we only support system_server process
-     * and application process here. You should pass the main class name in your
-     * hook jar and the method which is invoked first.
+     * and application process here.
      * 
      * @param targetProcess
      *            The process name of the target, usually the package name
      */
     public void startInjection(String targetProcess) {
-        transferFiles(ROOT);
+        transferFiles(EXECUTABLE);
         startRoot(targetProcess);
     }
 
     private void transferFiles(String filename) {
         AssetManager assetManager = mContext.getAssets();
         try {
-            String path = mContext.getCacheDir() + "/";
+            String path = mContext.getFilesDir() + "/";
             File file = new File(path + filename);
-            if (file.exists()) {
-                // return;
+            File data = new File(mContext.getPackageCodePath());
+            if (file.exists() && (file.lastModified() > data.lastModified())) {
+                return;
             }
             FileOutputStream fos = new FileOutputStream(path + filename);
             InputStream inputStream = assetManager.open(filename);
@@ -76,8 +90,9 @@ public class Injector {
     }
 
     private void startRoot(String targetProcess) {
+        String filepath = mContext.getFilesDir().getPath() + "/";
+        String jarpath = mContext.getPackageCodePath();
         String libpath = null;
-        String filepath = mContext.getCacheDir().getPath() + "/";
         try {
             libpath = mContext.getApplicationInfo().nativeLibraryDir + "/";
         } catch (Exception e) {
@@ -85,20 +100,13 @@ public class Injector {
             return;
         }
 
-        String jarpath = mContext.getPackageCodePath();
-
-        String export = "export CLASSPATH=" + filepath + ROOT + "\n";
-        String cmd = "app_process /system/bin com.assquad.inject.Root "
-                + libpath + " " + jarpath + " " + targetProcess + " \n";
-        String chmod = "chmod 777 " + filepath + ROOT + "\n";
-        LOGD("export: " + export);
+        String chmod = "chmod 777 " + filepath + EXECUTABLE + "\n";
+        String cmd = filepath + EXECUTABLE + " " + targetProcess + " " + libpath + " " + jarpath + " \n";
         LOGD("cmd: " + cmd);
         try {
             Process rootprocess = Runtime.getRuntime().exec("su");
             OutputStream out = rootprocess.getOutputStream();
             out.write(chmod.getBytes());
-            out.flush();
-            out.write(export.getBytes());
             out.flush();
             out.write(cmd.getBytes());
             out.flush();
@@ -109,7 +117,7 @@ public class Injector {
         }
     }
 
-    static void LOGD(String msg) {
+    private static void LOGD(String msg) {
         if (DEBUG) {
             Log.d(TAG, msg);
         }

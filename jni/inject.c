@@ -64,20 +64,19 @@ int find_pid_of(const char *process_name) {
 	return pid;
 }
 
-char * str_contact(const char *str1,const char *str2) {
-    char * result;
-    result = (char*)malloc(strlen(str1) + strlen(str2) + 1); //str1的长度 + str2的长度 + \0;
-    if(!result){ //如果内存动态分配失败
-    LOGD("Error: malloc failed in concat! \n");
-       exit(EXIT_FAILURE);
-    }
-    strcpy(result,str1);
-    strcat(result,str2); //字符串拼接
-    return result;
+char * str_contact(const char *str1, const char *str2) {
+	char * result;
+	result = (char*) malloc(strlen(str1) + strlen(str2) + 1); //str1的长度 + str2的长度 + \0;
+	if (!result) { //如果内存动态分配失败
+		LOGD("Error: malloc failed in concat! \n");
+		exit(EXIT_FAILURE);
+	}
+	strcpy(result, str1);
+	strcat(result, str2); //字符串拼接
+	return result;
 }
 
-int Java_com_assquad_inject_RootImpl_inject(JNIEnv* env, jobject thiz,
-		jstring nativelib, jstring targetProcess, jstring hookjar) {
+int main(int argc, char* argv[]) {
 	int pid;
 	struct link_map *map;
 	struct elf_info einfo;
@@ -89,23 +88,27 @@ int Java_com_assquad_inject_RootImpl_inject(JNIEnv* env, jobject thiz,
 	long hooker_fopen = 0;
 	char pathfile[100];
 
+	if (argc != 4) {
+		LOGE("illegal arguments, injection reject");
+		return -1;
+	}
 	LOGD("inject begin");
 
-	pid = find_pid_of((*env)->GetStringUTFChars(env, targetProcess, 0));
+	pid = find_pid_of(argv[1]);
 	ptrace_attach(pid);
 
 	ptrace_find_dlinfo(pid);
 
-	handle = ptrace_dlopen(pid, str_contact((*env)->GetStringUTFChars(env, nativelib, 0), HOOK_LIB), 1);
+	handle = ptrace_dlopen(pid, str_contact(argv[2], HOOK_LIB), 1);
 	printf("ptrace_dlopen handle %p\n", handle);
 	proc = (long) ptrace_dlsym(pid, handle, "hook");
 	printf("main = %lx\n", proc);
-	//replace_all_rels(pid, "connect", proc, sos);
 	ptrace_arg arg;
-	arg.s = (*env)->GetStringUTFChars(env, hookjar, 0);
+	arg.s = argv[3];
 	arg.type = PAT_STR;
 	ptrace_call(pid, proc, 1, &arg);
 	ptrace_detach(pid);
 	LOGD("inject end");
 	exit(0);
+	return 0;
 }
