@@ -181,7 +181,7 @@ unsigned long ptrace_push(int pid, regs_t *regs, void *paddr, int size) {
     unsigned long arm_sp;
     arm_sp = regs->ARM_sp;
     arm_sp -= size;
-    arm_sp = arm_sp - arm_sp % 4;
+    arm_sp = arm_sp - arm_sp % 8;
     regs->ARM_sp= arm_sp;
     ptrace_write(pid, arm_sp, paddr, size);
     return arm_sp;
@@ -191,7 +191,7 @@ unsigned long ptrace_push(int pid, regs_t *regs, void *paddr, int size) {
     ptrace_readreg(pid, &regs);
     esp = regs.esp;
     esp -= size;
-    esp = esp - esp % 4;
+    esp = esp - esp % 8;
     regs.esp = esp;
     ptrace_writereg(pid, &regs);
     ptrace_write(pid, esp, paddr, size);
@@ -203,7 +203,7 @@ long ptrace_stack_alloc(pid_t pid, regs_t *regs, int size) {
     unsigned long arm_sp;
     arm_sp = regs->ARM_sp;
     arm_sp -= size;
-    arm_sp = arm_sp - arm_sp % 4;
+    arm_sp = arm_sp - arm_sp % 8;
     regs->ARM_sp= arm_sp;
     return arm_sp;
 }
@@ -227,7 +227,7 @@ void *ptrace_dlopen(pid_t pid, const char *filename, int flag) {
     regs.ARM_pc= ldl.l_dlopen;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    ptrace_wait_for_signal(pid, SIGSEGV);
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_call\n");
     return (void*) regs.ARM_r0;
@@ -255,7 +255,7 @@ void *ptrace_dlsym(pid_t pid, void *handle, const char *symbol) {
     regs.ARM_pc= ldl.l_dlsym;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    ptrace_wait_for_signal(pid, SIGSEGV);
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_dlsym\n");
     return (void*) regs.ARM_r0;
@@ -281,7 +281,7 @@ int ptrace_mymath_add(pid_t pid, long mymath_add_addr, int a, int b) {
     regs.ARM_pc= mymath_add_addr;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    ptrace_wait_for_signal(pid, SIGSEGV);
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_mymath_add\n");
     return regs.ARM_r0;
@@ -338,7 +338,7 @@ int ptrace_call(int pid, long proc, int argc, ptrace_arg *argv) {
     regs.ARM_pc= proc;
     ptrace_writereg(pid, &regs);
     ptrace_cont(pid);
-    LOGD("done %d\n", ptrace_wait_for_signal(pid, SIGSEGV));
+    ptrace_wait_for_signal(pid, SIGSEGV);
     ptrace_readreg(pid, &regs);
     ptrace_dump_regs(&regs, "before return ptrace_call\n");
 

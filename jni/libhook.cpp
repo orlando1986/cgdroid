@@ -29,7 +29,7 @@ int invoke_dex_method(const char* dexPath,
 	/* Get SystemClasLoader */
 	stringClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
 	classLoaderClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/ClassLoader"));
-	dexClassLoaderClass = (jclass) env->NewGlobalRef(env->FindClass("dalvik/system/DexFile"));
+	dexClassLoaderClass = (jclass) env->NewGlobalRef(env->FindClass("dalvik/system/PathClassLoader"));
 	getSystemClassLoaderMethod = env->GetStaticMethodID(classLoaderClass,
 			"getSystemClassLoader", "()Ljava/lang/ClassLoader;");
 	systemClassLoaderObject = env->CallStaticObjectMethod(classLoaderClass,
@@ -38,23 +38,19 @@ int invoke_dex_method(const char* dexPath,
 	/* Create DexClassLoader */
 	dexClassLoaderContructor =
 			env->GetMethodID(dexClassLoaderClass, "<init>",
-					"(Ljava/lang/String;)V");
+					"(Ljava/lang/String;Ljava/lang/ClassLoader;)V");
 	dexPathString = (jstring) env->NewGlobalRef(env->NewStringUTF(dexPath));
 	//dexOptDirString = (jstring) env->NewGlobalRef(env->NewStringUTF(dexOptDir));
 
 	dexClassLoaderObject = env->NewObject(dexClassLoaderClass, dexClassLoaderContructor,
-			dexPathString);
+			dexPathString, systemClassLoaderObject);
 
 	/* Use DexClassLoader to load target class */
 	loadClassMethod = env->GetMethodID(dexClassLoaderClass, "loadClass",
-			"(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/Class;");
+			"(Ljava/lang/String;)Ljava/lang/Class;");
 	classNameString = (jstring) env->NewGlobalRef(env->NewStringUTF(className));
 	targetClass = (jclass) env->CallObjectMethod(dexClassLoaderObject,
-			loadClassMethod, classNameString, systemClassLoaderObject);
-
-	/* close dexfile */
-	closeDexFile = env->GetMethodID(dexClassLoaderClass, "close", "()V");
-	env->CallObjectMethod(dexClassLoaderObject, closeDexFile);
+			loadClassMethod, classNameString);
 
 	if (!targetClass) {
 		LOGE("Failed to load target class %s", className);
@@ -86,8 +82,8 @@ int invoke_dex_method(const char* dexPath,
 }
 
 int hook(char *argv) {
-	LOGD("loading dex begin: %s", argv);
-	invoke_dex_method(argv, "com.assquad.inject.Hooker", "main", 1, &argv);
+	LOGD("loading dex begin");
+	invoke_dex_method(argv, "com.assquad.inject.Hook", "main", 0, NULL);
 	LOGD("loading dex end");
     return -1;
 }
