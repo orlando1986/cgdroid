@@ -11,6 +11,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+//        String s = new Proxy().generateProxy();
+//        Log.e("assquad", s);
         Injector inj = new Injector(this);
         inj.startInjection("com.marvell.mars");
     }

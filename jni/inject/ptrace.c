@@ -20,7 +20,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <utils.h>
+#include "utils.h"
 
 #include <stdarg.h>
 #include "linker.h"

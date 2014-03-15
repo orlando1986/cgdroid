@@ -31,12 +31,14 @@ typedef struct user_regs_struct regs_t;
 #endif
 
 #define HOOK_LIB   "libhook.so"
-#define LOG_TAG    "assquad"
+#define TAG    "assquad"
 
 #define DEBUG 0
-#define LOGI(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, fmt, ##args)
-#define LOGD(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, fmt, ##args)
-#define LOGE(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, fmt, ##args)
+#define LOGV(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_VERBOSE, TAG, fmt, ##args)
+#define LOGI(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_INFO, TAG, fmt, ##args)
+#define LOGD(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_DEBUG, TAG, fmt, ##args)
+#define LOGE(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_ERROR, TAG, fmt, ##args)
+#define LOGW(fmt, args...) if (DEBUG) __android_log_print(ANDROID_LOG_WARN, TAG, fmt, ##args)
 
 /*dl function list */
 struct dl_fl{
