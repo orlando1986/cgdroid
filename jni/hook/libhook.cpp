@@ -17,8 +17,8 @@
 
 extern "C" {
 
-static void Hook_generateProxyClass(JNIEnv* env, jobject thiz, jstring className,
-		jstring srcClass) {
+static void Hook_generateProxyClass(JNIEnv* env, jobject thiz,
+		jstring className, jstring srcClass) {
 	const char* clazz = (env)->GetStringUTFChars(className, 0);
 	const char* name = (env)->GetStringUTFChars(srcClass, 0);
 
@@ -30,18 +30,20 @@ static void Hook_generateProxyClass(JNIEnv* env, jobject thiz, jstring className
 }
 
 const JNINativeMethod gMethods[] = { { "generateProxyClass",
-		"(Ljava/lang/String;Ljava/lang/String;)V", (void *) Hook_generateProxyClass } };
+		"(Ljava/lang/String;Ljava/lang/String;)V",
+		(void *) Hook_generateProxyClass } };
 
 static int register_android_jni(JNIEnv *env, jclass clazz) {
 	return env->RegisterNatives(clazz, gMethods, sizeof(gMethods));
 }
 
-int invoke_dex_method(const char* dexPath, const char* className, const char* proxyName,
-		const char* methodName, int argc, char *argv[]) {
+int invoke_dex_method(const char* dexPath, const char* className,
+		const char* proxyName, const char* methodName, int argc, char *argv[]) {
 	LOGD("Invoke dex E");
 	JNIEnv * env = android::AndroidRuntime::getJNIEnv();
 
-	jclass stringClass, classLoaderClass, dexClassLoaderClass, targetClass, proxyClass;
+	jclass stringClass, classLoaderClass, dexClassLoaderClass, targetClass,
+			proxyClass;
 	jmethodID getSystemClassLoaderMethod, dexClassLoaderContructor,
 			loadClassMethod, targetMethod, closeDexFile;
 	jobject systemClassLoaderObject, dexClassLoaderObject;
@@ -114,9 +116,28 @@ int invoke_dex_method(const char* dexPath, const char* className, const char* pr
 	return 0;
 }
 
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+	JNIEnv* env = NULL;
+	jint result = -1;
+
+	if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+		return -1;
+	}
+	assert(env != NULL);
+
+	jclass proxyClass = env->FindClass("com.assquad.inject.Proxy");
+
+	register_android_jni(env, proxyClass);
+
+	result = JNI_VERSION_1_4;
+
+	return result;
+}
+
 int hook(char *argv) {
 	LOGD("loading dex begin");
-	invoke_dex_method(argv, "com.assquad.inject.Hook", "com.assquad.inject.Proxy", "main", 0, NULL);
+	invoke_dex_method(argv, "com.assquad.inject.Hook",
+			"com.assquad.inject.Proxy", "main", 0, NULL);
 	LOGD("loading dex end");
 	return -1;
 }

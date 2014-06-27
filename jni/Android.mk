@@ -11,7 +11,7 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := hook/libhook.cpp hook/Proxy.cpp
-LOCAL_MODULE := libhook
+LOCAL_MODULE := libcg
 LOCAL_MODULE_TAGS := optional
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
